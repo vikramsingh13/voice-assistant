@@ -1,4 +1,6 @@
 import { openai } from "@/lib/openai";
+// import chat system prompts
+import { systemPromptChat } from "@/lib/prompts/systemPrompts";
 
 type ChatRequestBody = {
     message?: string;
@@ -21,7 +23,7 @@ export async function POST(request: Request) {
             input: [
                 {
                     role: "system",
-                    content: "You are a helpful voice assistant that provides concise answers to user questions."
+                    content: systemPromptChat["twoShotHelpfulAssistant"]
                 },
                 {
                     role: "user",
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
             ],
         });
 
+        // TODO: return the system prompt name and version for logs and future debugging and analytics
         return Response.json({
             text: response.output_text,
         });
