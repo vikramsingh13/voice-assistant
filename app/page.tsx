@@ -1,7 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
+// import the components we created for recording, audio playback, and displaying transcript/response
 import Recorder from "@/components/Recorder";
+import AudioPlayer from "@/components/AudioPlayer";
+import TranscriptPanel from "@/components/TranscriptPanel";
+import ResponsePanel from "@/components/ResponsePanel";
+
+// import audio helpers
+import { createAudioFormData, createAudioUrl, revokeAudioUrl } from "@/lib/audio";
+
+// import types for better type safety
+import { ChatResponse, SttResponse } from "@/lib/types";
+
 
 export default function HomePage() {
   const [transcript, setTranscript] = useState("");
@@ -9,6 +20,7 @@ export default function HomePage() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   async function handleRecordingComplete(audioBlob: Blob) {
     try {
