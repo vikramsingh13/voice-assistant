@@ -20,6 +20,7 @@ export default function HomePage() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // keep track of the current audio URL to revoke it later and avoid memory leaks
   const currentAudioUrlRef = useRef<string | null>(null);
 
   async function handleRecordingComplete(audioBlob: Blob) {
@@ -28,17 +29,17 @@ export default function HomePage() {
       setTranscript("");
       setResponseText("");
 
-      const formData = new FormData();
-      formData.append("file", audioBlob, "recording.webm");
+      // create form data for the STT request
+      const formData = createAudioFormData(audioBlob);
 
       const sttResponse = await fetch("/api/stt", {
         method: "POST",
         body: formData,
       });
 
-      const sttData = await sttResponse.json();
+      const sttData = (await sttResponse.json()) as SttResponse;
 
-      if (!sttResponse.ok) {
+      if (!sttResponse.ok || !sttData.text) {
         throw new Error(sttData.error || "STT request failed.");
       }
 
@@ -56,7 +57,7 @@ export default function HomePage() {
 
       const chatData = await chatResponse.json();
 
-      if (!chatResponse.ok) {
+      if (!chatResponse.ok || !chatData.text) {
         throw new Error(chatData.error || "Chat request failed.");
       }
 
@@ -73,12 +74,20 @@ export default function HomePage() {
       });
 
       if (!ttsResponse.ok) {
-        const ttsData = await ttsResponse.json();
+        const ttsData = (await ttsResponse.json()) as { error?: string };
         throw new Error(ttsData.error || "TTS request failed.");
       }
 
-      const audioBlobResponse = await ttsResponse.blob();
-      const audioUrl = URL.createObjectURL(audioBlobResponse);
+      const ttsAudioBlob = await ttsResponse.blob();
+
+      // revoke the previous audio URL if it exists to avoid memory leaks
+      if (currentAudioUrlRef.current) {
+        revokeAudioUrl(currentAudioUrlRef.current);
+      }
+
+      // create a new audio URL for the TTS response
+      const audioUrl = createAudioUrl(ttsAudioBlob);
+      currentAudioUrlRef.current = audioUrl;
 
       if (audioRef.current) {
         audioRef.current.pause();
@@ -87,6 +96,10 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error("Voice assistant error:", error);
+      // generic error message for the client, detailed error logged on the server
+      setResponseText(
+        error instanceof Error ? error.message : "Something went wrong."
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -100,17 +113,10 @@ export default function HomePage() {
 
       {isProcessing && <p>Processing...</p>}
 
-      <div className="rounded border p-4">
-        <h2 className="mb-2 text-lg font-medium">Transcript</h2>
-        <p>{transcript || "No transcript yet."}</p>
-      </div>
+      <TranscriptPanel transcript={transcript} />
+      <ResponsePanel responseText={responseText} />
 
-      <div className="rounded border p-4">
-        <h2 className="mb-2 text-lg font-medium">Assistant Response</h2>
-        <p>{responseText || "No response yet."}</p>
-      </div>
-
-      <audio ref={audioRef} controls className="w-full" />
+      <AudioPlayer ref={audioRef} />
     </main>
   );
 }
