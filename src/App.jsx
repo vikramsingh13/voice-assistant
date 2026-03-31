@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import TalkingAvatar from './components/TalkingAvatar';
+import { mockChat } from './services/mockApi';
 
 function App() {
   // State to hold the text that the avatar will speak
@@ -11,9 +12,7 @@ function App() {
   const [isSpeakTextLoading, setIsSpeakTextLoading] = useState(false);
 
   // async function to handle the form submission and generate a response from the avatar
-  async function handleChatSubmit(e) {
-    e.preventDefault();
-
+  async function handleChatSubmit() {
     // If no input or if model is already generating a response, do nothing
     if (!typedText.trim() || isSpeakTextLoading) return;
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { TalkingHead } from "@met4citizen/talkinghead";
+import { TalkingHead } from "@met4citizen/talkinghead/modules/talkinghead.mjs";
 
 function TalkingAvatar({ speakText }) {
   const containerRef = useRef(null);
@@ -18,7 +18,7 @@ function TalkingAvatar({ speakText }) {
       headRef.current = head;
 
       await head.showAvatar({
-        url: "/avatars/model.glb",
+        url: "/avatars/model-type2.glb",
         body: "F",
         avatarMood: "neutral",
         ttsLang: "en-US",
@@ -33,7 +33,8 @@ function TalkingAvatar({ speakText }) {
 
     return () => {
       cancelled = true;
-      headRef.current?.dispose?.();
+      // causing issues with react strict mode, so commenting out for now. Will need to revisit cleanup logic in the future.
+      //headRef.current?.dispose?.();
       headRef.current = null;
     };
   }, []);
