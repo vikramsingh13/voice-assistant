@@ -13,6 +13,9 @@ import { createAudioFormData, createAudioUrl, revokeAudioUrl } from "@/lib/audio
 // import types for better type safety
 import { ChatResponse, SttResponse } from "@/lib/types";
 
+// import a talking head avatar component for some visual flair
+import TalkingHeadAvatar from "@/components/TalkingHeadAvatar";
+
 
 export default function HomePage() {
   const [transcript, setTranscript] = useState("");
@@ -106,9 +109,19 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 p-6">
-      <h1 className="text-2xl font-semibold">DREA | Your Everything Assistant</h1>
+    <main className="mx-auto min-h-screen max-w-6xl p-6">
+      <h1 className="mb-8 text-center text-2xl font-semibold">DREA | Your Everything Assistant</h1>
 
+      {/** grid Layout */}
+      <div className="grid gap-6 lg:grid-cols-2">
+
+      {/** talking head avatar section */}
+      <section className="flex min-h-[500px] items-start justify-center rounded border p-4">
+        <TalkingHeadAvatar />
+      </section>
+
+      {/** recording and response panels */}
+      <section className="flex flex-col gap-6 rounded border p-4">
       <Recorder onRecordingComplete={handleRecordingComplete} />
 
       {isProcessing && <p>Processing...</p>}
@@ -117,6 +130,8 @@ export default function HomePage() {
       <ResponsePanel responseText={responseText} />
 
       <AudioPlayer ref={audioRef} />
+      </section>
+      </div>
     </main>
   );
 }
