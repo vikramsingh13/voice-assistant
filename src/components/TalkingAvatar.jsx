@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { TalkingHead } from "@met4citizen/talkinghead";
 
-export default function TalkingAvatar({ speakText }) {
+function TalkingAvatar({ speakText }) {
   const containerRef = useRef(null);
   const headRef = useRef(null);
 
@@ -49,3 +49,5 @@ export default function TalkingAvatar({ speakText }) {
 
   return <div ref={containerRef} style={{ width: "100%", height: "500px" }} />;
 }
+
+export default TalkingAvatar;
