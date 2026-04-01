@@ -1,7 +1,10 @@
 import { useEffect, useRef } from "react";
 import { TalkingHead } from "@met4citizen/talkinghead/modules/talkinghead.mjs";
 
-function TalkingAvatar({ speakText }) {
+// Component to render the talking avatar using the @met4citizen/talkinghead library
+// props:
+// - onHeadReady: TalkingHead instance
+function TalkingAvatar({ onHeadReady }) {
   const containerRef = useRef(null);
   const headRef = useRef(null);
 
@@ -16,6 +19,7 @@ function TalkingAvatar({ speakText }) {
       });
 
       headRef.current = head;
+      onHeadReady?.(head);
 
       await head.showAvatar({
         url: "/avatars/model-type2.glb",
@@ -36,6 +40,8 @@ function TalkingAvatar({ speakText }) {
       // causing issues with react strict mode, so commenting out for now. Will need to revisit cleanup logic in the future.
       //headRef.current?.dispose?.();
       headRef.current = null;
+      // clean up TalkingHead instance and call onHeadReady with null when component unmounts
+      onHeadReady?.(null);
     };
   }, []);
 

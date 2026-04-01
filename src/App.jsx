@@ -18,6 +18,14 @@ function App() {
 
   // track audio ref to stop previous audio when new response is generated
   const audioRef = useRef(null);
+  // track current head instance to stop it when new response is generated
+  const headInstanceRef = useRef(null);
+  
+  // callback to get the current head instance from the TalkingAvatar component and store it in a ref so we can stop it when a new response is generated
+  function handleHeadReady(headInstance) {
+    // set the current head instance in a ref so we can stop it when a new response is generated
+    headInstanceRef.current = headInstance;
+  }
 
   // async function to handle the form submission and generate a response from the avatar
   async function handleChatSubmit() {
@@ -26,6 +34,7 @@ function App() {
 
     // Set loading state to true while generating response
     setIsSpeakTextLoading(true);
+
 
     // try catch block to handle the async operation of generating a model response
     try {
@@ -60,7 +69,7 @@ function App() {
 
   return (
     <main>
-      <TalkingAvatar speakText={speakText} />
+      <TalkingAvatar onHeadReady={handleHeadReady} />
 
       {/* Input field to type text for the avatar to respond to. 
       for now we are testing with text user input*/}
