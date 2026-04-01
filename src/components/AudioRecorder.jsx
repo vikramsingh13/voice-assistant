@@ -1,11 +1,7 @@
 import { useRef, useState } from "react";
 import { transcribeAudio } from "../services/openai/stt";
 
-export default function AudioRecorder({
-  onTranscript,
-  onRecordedAudio,
-  disabled = false,
-}) {
+export default function AudioRecorder({ onTranscript, disabled = false }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
 
@@ -41,11 +37,7 @@ export default function AudioRecorder({
             type: audioBlob.type,
           });
 
-          const recordedUrl = URL.createObjectURL(audioBlob);
-          onRecordedAudio?.(recordedUrl);
-
           const result = await transcribeAudio(audioFile);
-          // handle case where result may not be a string or may not have text property
           const transcript = typeof result === "string" ? result : result?.text || "";
 
           console.log("STT result:", result);
