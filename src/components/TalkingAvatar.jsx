@@ -56,7 +56,7 @@ function TalkingAvatar({ speakText }) {
     const utterance = new SpeechSynthesisUtterance(speakText);
     utterance.lang = "en-US";
 
-    window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }, [speakText]);
 
