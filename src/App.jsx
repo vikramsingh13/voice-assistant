@@ -8,27 +8,28 @@ import { createSpeechAudio } from './services/openai/tts';
 function App() {
   // State to hold the text that the avatar will speak
   const [speakText, setSpeakText] = useState("");
-  // Typed text state for the input field
-  const [typedText, setTypedText] = useState("");
   // loading state to indicate when the avatar is generating a response
-  const [isSpeakTextLoading, setIsSpeakTextLoading] = useState(false);
+  const [isResponseLoading, setIsResponseLoading] = useState(false);
   // assistant text response we get back from the model
   const [assistantText, setAssistantText] = useState("");
-  // audio url state for the generated speech audio
-  const [audioUrl, setAudioUrl] = useState("");
 
-  // track audio ref to stop previous audio when new response is generated
-  const audioRef = useRef(null);
+  // audio url for the user's recorded microphone input
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState("");
+  // audio url for the generated tts response from the model
+  const [responseAudioUrl, setResponseAudioUrl] = useState("");
+
+  // track audio ref for the generated tts response player
+  const responseAudioRef = useRef(null);
   // track current head instance to stop it when new response is generated
   const headInstanceRef = useRef(null);
   
-  // async function to generate a response from the assistant based on user text input or transcript from audio recording
+  // async function to generate a response from the assistant based on transcript from audio recording
   async function generateAssistantReply(userText) {
     // If no input or if model is already generating a response, do nothing
-    if (!userText.trim() || isSpeakTextLoading) return;
+    if (!userText.trim() || isResponseLoading) return;
 
     // Stop any current audio playback and head animation when generating a new response
-    setIsSpeakTextLoading(true);
+    setIsResponseLoading(true);
 
     // try catch block to handle the async operation of generating a model response
     try {
@@ -40,51 +41,28 @@ function App() {
         throw new Error("Assistant reply was empty.");
       }
 
-      const nextAudioUrl = await createSpeechAudio(replyText);
+      const nextResponseAudioUrl = await createSpeechAudio(replyText);
+      console.log("TTS object URL:", nextResponseAudioUrl);
 
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
+      // stop the previous tts audio playback before swapping in the next generated audio
+      if (responseAudioRef.current) {
+        responseAudioRef.current.pause();
+        responseAudioRef.current.currentTime = 0;
       }
 
-      setAudioUrl(nextAudioUrl);
+      // revoke the previous tts object url before storing the next one
+      setResponseAudioUrl((previousResponseAudioUrl) => {
+        if (previousResponseAudioUrl) {
+          URL.revokeObjectURL(previousResponseAudioUrl);
+        }
+
+        return nextResponseAudioUrl;
+      });
     } catch (error) {
       console.error("Error generating response:", error);
       setAssistantText("Sorry, something went wrong.");
     } finally {
-      setIsSpeakTextLoading(false);
-    }
-  }
-
-  // async function to handle the form submission and generate a response from the avatar
-  async function handleChatSubmit() {
-    // If no input or if model is already generating a response, do nothing
-    if (!typedText.trim() || isSpeakTextLoading) return;
-
-    // Set loading state to true while generating response
-    setIsSpeakTextLoading(true);
-
-
-    // try catch block to handle the async operation of generating a model response
-    try {
-      const replyText = await createChatResponse(typedText);
-      setAssistantText(replyText);
-      setSpeakText(replyText);
-
-      if (!replyText.trim()) {
-        throw new Error("Assistant reply was empty.");
-      }
-
-      const nextAudioUrl = await createSpeechAudio(replyText);
-
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-      setAudioUrl(nextAudioUrl);
-    } catch (error) {
-      console.error("Error generating response:", error);
-      setAssistantText("Sorry, something went wrong.");
-    } finally {
-      setIsSpeakTextLoading(false);
+      setIsResponseLoading(false);
     }
   }
 
@@ -96,29 +74,41 @@ function App() {
 
   // callback function to handle the transcript we get back from the AudioRecorder component
   async function handleTranscript(transcript) {
-    setTypedText(transcript);
-
     if (!transcript.trim()) return;
 
     // generate a response from the assistant based on the transcript
     await generateAssistantReply(transcript);
   }
 
-  // async function to handle playing audio response
-  async function handlePlayAudio() {
-    if(!audioRef.current || !audioUrl) return;
-    audioRef.current.currentTime = 0;
-    await audioRef.current.play();
+  // callback function to store the user's recorded audio separately from the returned tts audio
+  function handleRecordedAudio(recordedUrl) {
+    setRecordedAudioUrl((previousRecordedAudioUrl) => {
+      if (previousRecordedAudioUrl) {
+        URL.revokeObjectURL(previousRecordedAudioUrl);
+      }
+
+      return recordedUrl;
+    });
   }
 
-  // useEffect to stop any current audio playback or head animation when a new response is being generated
-  useEffect(() => {
-    return () => {
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, [audioUrl]);
+  // async function to handle playing the generated tts audio response
+  async function handlePlayResponseAudio() {
+    if (!responseAudioRef.current || !responseAudioUrl) return;
+    responseAudioRef.current.currentTime = 0;
+    await responseAudioRef.current.play();
+  }
+
+  // async function to auto play the generated tts audio once the audio element can play
+  async function handleResponseAudioCanPlay() {
+    if (!responseAudioRef.current) return;
+
+    try {
+      responseAudioRef.current.currentTime = 0;
+      await responseAudioRef.current.play();
+    } catch (error) {
+      console.error("Error auto-playing response audio:", error);
+    }
+  }
 
   return (
     <main>
@@ -127,19 +117,21 @@ function App() {
       {/* TODO: refactor later to constantly listen for audio input and generate responses in real-time, rather than using a submit button to trigger the response generation. For now, this is easier for testing and iterating on the core functionality of generating responses based on audio input. */}
       <AudioRecorder 
         onTranscript={handleTranscript}
-        disabled={isSpeakTextLoading}  
+        onRecordedAudio={handleRecordedAudio}
+        disabled={isResponseLoading}  
       />
 
       {/* Display the assistant's text response below the avatar */}
       <div>{assistantText}</div>
 
-      {/* Render audio player and play button if audioUrl is available */}
-      {audioUrl && (
+      {/* Render audio player and play button for the generated tts response */}
+      {responseAudioUrl && (
         <>
-          <audio ref={audioRef} src={audioUrl} controls />
-          <button onClick={handlePlayAudio} disabled={!audioUrl}>
-            Play Response
-          </button>
+          <audio
+            ref={responseAudioRef}
+            src={responseAudioUrl}
+            controls
+          />
         </>
       )}
     </main>
