@@ -39,27 +39,6 @@ function TalkingAvatar({ speakText }) {
     };
   }, []);
 
-  useEffect(() => {
-    // TODO: this logic calls talking head internal tts
-    // revisit to integrate with openai or our own backend tts in the future
-    
-    /* async function speak() {
-      if (!speakText || !headRef.current) return;
-      await headRef.current.speakText(speakText);
-    }
-
-    speak();
-    */
-    
-    if (!speakText || !headRef.current) return;
-
-    const utterance = new SpeechSynthesisUtterance(speakText);
-    utterance.lang = "en-US";
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }, [speakText]);
-
   return <div ref={containerRef} style={{ width: "100%", height: "500px" }} />;
 }
 
