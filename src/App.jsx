@@ -91,25 +91,6 @@ function App() {
     });
   }
 
-  // async function to handle playing the generated tts audio response
-  async function handlePlayResponseAudio() {
-    if (!responseAudioRef.current || !responseAudioUrl) return;
-    responseAudioRef.current.currentTime = 0;
-    await responseAudioRef.current.play();
-  }
-
-  // async function to auto play the generated tts audio once the audio element can play
-  async function handleResponseAudioCanPlay() {
-    if (!responseAudioRef.current) return;
-
-    try {
-      responseAudioRef.current.currentTime = 0;
-      await responseAudioRef.current.play();
-    } catch (error) {
-      console.error("Error auto-playing response audio:", error);
-    }
-  }
-
   return (
     <main>
       <TalkingAvatar onHeadReady={handleHeadReady} />
