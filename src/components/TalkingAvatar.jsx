@@ -5,9 +5,13 @@ import { HeadAudio } from "@met4citizen/headaudio/modules/headaudio.mjs";
 // Component to render the talking avatar using the @met4citizen/talkinghead library
 // props:
 // - onHeadReady: TalkingHead instance
-function TalkingAvatar({ onHeadReady }) {
+function TalkingAvatar({ onHeadReady, audioUrl }) {
   const containerRef = useRef(null);
   const headRef = useRef(null);
+
+  const headaudioRef = useRef(null);
+  const mediaElRef = useRef(null);
+  const mediaSourceRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,7 +91,9 @@ function TalkingAvatar({ onHeadReady }) {
       };
 
       if (cancelled) {
+        mediaElRef.current?.pause();
         head.dispose?.();
+        
       }
     }
 
@@ -95,6 +101,11 @@ function TalkingAvatar({ onHeadReady }) {
 
     return () => {
       cancelled = true;
+      mediaElRef.current?.pause();
+      mediaElRef.current = null;
+      mediaSourceRef.current = null;
+
+      headaudioRef.current = null;
       // causing issues with react strict mode, so commenting out for now. Will need to revisit cleanup logic in the future.
       //headRef.current?.dispose?.();
       headRef.current = null;
@@ -102,6 +113,65 @@ function TalkingAvatar({ onHeadReady }) {
       onHeadReady?.(null);
     };
   }, []);
+
+  useEffect(() => {
+    const head = headRef.current;
+    if (!head || !audioUrl) return;
+
+    let cancelled = false;
+
+    async function playExternalAudio() {
+      try {
+        await head.audioCtx.resume();
+
+        // Create the HTMLAudioElement once
+        if (!mediaElRef.current) {
+          const audioEl = new Audio();
+          audioEl.preload = "auto";
+          audioEl.crossOrigin = "anonymous";
+          mediaElRef.current = audioEl;
+
+          // Route the media element into the same AudioContext
+          const mediaSource = head.audioCtx.createMediaElementSource(audioEl);
+          mediaSourceRef.current = mediaSource;
+
+          // Feed external audio into TalkingHead's speech chain
+          mediaSource.connect(head.audioSpeechGainNode);
+        }
+
+        const audioEl = mediaElRef.current;
+
+        audioEl.pause();
+        audioEl.currentTime = 0;
+        audioEl.src = audioUrl;
+
+        audioEl.onplay = () => {
+          head.lookAtCamera(500);
+          head.speakWithHands?.();
+        };
+
+        audioEl.onended = () => {
+          // optional: any end-of-playback behavior here
+        };
+
+        if (!cancelled) {
+          await audioEl.play();
+        }
+      } catch (error) {
+        console.error("Failed to play external audio in TalkingAvatar:", error);
+      }
+    }
+
+    playExternalAudio();
+
+    return () => {
+      cancelled = true;
+      if (mediaElRef.current) {
+        mediaElRef.current.pause();
+        mediaElRef.current.currentTime = 0;
+      }
+    };
+  }, [audioUrl]);
 
   return <div ref={containerRef} style={{ width: "100%", height: "500px" }} />;
 }

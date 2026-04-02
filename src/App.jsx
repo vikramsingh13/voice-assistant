@@ -93,7 +93,7 @@ function App() {
 
   return (
     <main>
-      <TalkingAvatar onHeadReady={handleHeadReady} />
+      <TalkingAvatar onHeadReady={handleHeadReady} audioUrl={responseAudioUrl}/>
 
       {/* TODO: refactor later to constantly listen for audio input and generate responses in real-time, rather than using a submit button to trigger the response generation. For now, this is easier for testing and iterating on the core functionality of generating responses based on audio input. */}
       <AudioRecorder 
@@ -105,7 +105,8 @@ function App() {
       {/* Display the assistant's text response below the avatar */}
       <div>{assistantText}</div>
 
-      {/* Render audio player and play button for the generated tts response */}
+      {/* TODO: refactor to only show audio player for development/testing
+      {/* Render audio player and play button for the generated tts response 
       {responseAudioUrl && (
         <>
           <audio
@@ -115,6 +116,7 @@ function App() {
           />
         </>
       )}
+      */}
     </main>
       
   );
