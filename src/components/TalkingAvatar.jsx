@@ -70,8 +70,9 @@ function TalkingAvatar({ onHeadReady, audioUrl }) {
         body: "M",
         // The mood of the avatar. Supported moods: "neutral", "happy", "angry", "sad", "fear", "disgust", "love", "sleep".
         avatarMood: "happy",
-        ttsLang: "en-US",
-        lipsyncLang: 'en',
+        // tts and lipsync lang is not needed as tts is coming from external integration and headaudio is handling the blendshape generation based on the pretrained model.
+        // ttsLang: "en-US",
+        // lipsyncLang: 'en',
         // adjust these parameters to change how much the avatar moves and makes eye contact when speaking. For example, if you want a more subtle avatar that doesn't move as much, you could lower the avatarSpeakingHeadMove value
         // Head movement factor while speaking [0,1]. Example: 0.5 means 50% of the head movement detected by the model will be applied to the avatar.
         avatarSpeakingHeadMove: 0,
