@@ -61,12 +61,24 @@ function TalkingAvatar({ onHeadReady, audioUrl }) {
       headRef.current = head;
       onHeadReady?.(head);
 
+      // TODO: dynamically load different models and update parameters based on context, user preferences, etc. For now, just loading a single model with fixed parameters for testing and iteration purposes.
+      // show the avatar once everything is loaded and set up
       await head.showAvatar({
+        // fixed url path to the glb model in public folder
         url: "/avatars/model-type2.glb",
-        body: "F",
-        avatarMood: "neutral",
+        // "M" male, "F" female, should be dynamically changed to match the model being loaded.
+        body: "M",
+        // The mood of the avatar. Supported moods: "neutral", "happy", "angry", "sad", "fear", "disgust", "love", "sleep".
+        avatarMood: "happy",
         ttsLang: "en-US",
         lipsyncLang: 'en',
+        // adjust these parameters to change how much the avatar moves and makes eye contact when speaking. For example, if you want a more subtle avatar that doesn't move as much, you could lower the avatarSpeakingHeadMove value
+        // Head movement factor while speaking [0,1]. Example: 0.5 means 50% of the head movement detected by the model will be applied to the avatar.
+        avatarSpeakingHeadMove: 0,
+        // Eye contact factor while speaking [0,1]. Example: 0.5 means 50% of the eye contact detected by the model will be applied to the avatar.
+        avatarSpeakingEyeContact: 1,
+        // If true, looks straight ahead when speaking instead of speaking to the camera.
+        avatarIgnoreCamera: false,
         baseline: {
           // Adjust Avaturn head angle and eye lids
           headRotateX: -0.05,
@@ -85,7 +97,9 @@ function TalkingAvatar({ onHeadReady, audioUrl }) {
         const duration = Date.now() - lastEnded;
         if ( duration > 150 ) { 
           // New sentence, if 100 ms pause (adjust as needed)
-          head.lookAtCamera(500);
+          // make the model look at camera
+          head.lookAtCamera(60000);
+          head.makeEyeContact(60000);
           head.speakWithHands();
         }
       };
