@@ -160,11 +160,6 @@ function TalkingAvatar({ onHeadReady, audioUrl }) {
         audioEl.currentTime = 0;
         audioEl.src = audioUrl;
 
-        audioEl.onplay = () => {
-          head.lookAtCamera(500);
-          head.speakWithHands?.();
-        };
-
         audioEl.onended = () => {
           // optional: any end-of-playback behavior here
         };
