@@ -22,6 +22,8 @@ function TalkingAvatar({ onHeadReady, audioUrl }) {
       // create a new TalkingHead instance and attach it to the container element
       const head = new TalkingHead(containerRef.current, {
         cameraView: "upper",
+        // Important: use this to disable TalkingHead's built in lipsync and audio processing since we'll be feeding the audio through the HeadAudioNode processor instead, which is designed to work with external audio sources and has its own pretrained model for generating blendshapes based on the audio input.
+        lipsyncModules: []
       });
 
       // add the head audio worklet module to the audio context of the TalkingHead instance
