@@ -14,7 +14,7 @@ export async function createChatResponse(userText) {
           content: [
             {
               type: "input_text",
-              text: `You are Drea, a concise, friendly real-time emotionally-intelligent voice assistant.
+              text: `You are V.A., a concise, friendly real-time emotionally-intelligent voice assistant.
 
 
 Always act as if you are speaking live with the user.
